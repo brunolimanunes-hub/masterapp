@@ -8,19 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Cores MasterApp (#BB00FF) */
+        body { font-family: 'Inter', sans-serif; }
         .bg-master { background-color: #BB00FF; }
         .text-master { color: #BB00FF; }
         .border-master { border-color: #BB00FF; }
         .ring-master:focus { --tw-ring-color: #BB00FF; }
         .hover-master:hover { opacity: 0.9; }
 
-        /* Estrutura de Rolagem Horizontal do Kanban */
         .kanban-container {
             display: flex;
             overflow-x: auto;
@@ -29,91 +23,42 @@
             padding-bottom: 1.5rem;
             -webkit-overflow-scrolling: touch;
         }
-
         .kanban-column {
             flex: 0 0 320px;
             scroll-snap-align: center;
             min-height: 70vh;
-            transition: all 0.3s ease;
         }
+        @media (min-width: 768px) { .kanban-column { flex: 0 0 380px; scroll-snap-align: start; } }
 
-        @media (min-width: 768px) {
-            .kanban-column {
-                flex: 0 0 380px;
-                scroll-snap-align: start;
-            }
-        }
+        .task-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(187, 0, 255, 0.15); }
 
-        .task-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(187, 0, 255, 0.15);
-        }
+        .modal-active { display: flex !important; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 8px;
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-
-        .modal-active {
-            display: flex !important;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .color-dot {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-            border: 2px solid transparent;
-        }
-        .color-dot.active {
-            border-color: #1e293b;
-            transform: scale(1.2);
-        }
-
-        .category-dropdown {
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 110;
-        }
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+        .color-dot.active { border-color: #1e293b; transform: scale(1.2); }
+        .category-dropdown { max-height: 150px; overflow-y: auto; z-index: 110; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 custom-scrollbar">
 
     <div id="app">
-        <!-- Dashboard placeholder - Aparece durante o carregamento -->
         <div class="min-h-screen flex items-center justify-center">
             <div class="text-center">
                 <div class="w-16 h-16 text-master mx-auto mb-4 animate-bounce">
-                    <svg viewBox="0 0 100 100" class="fill-none stroke-current" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/>
-                    </svg>
+                    <svg viewBox="0 0 100 100" class="fill-none stroke-current"><path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-                <p class="text-slate-400 font-medium animate-pulse">A iniciar MasterApp...</p>
+                <p class="text-slate-400 font-medium animate-pulse">A carregar MasterApp...</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmação Customizado -->
+    <!-- Modals -->
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
             <h3 class="text-xl font-bold mb-2 text-slate-800" id="confirm-title">Confirmar?</h3>
@@ -125,7 +70,7 @@
         </div>
     </div>
 
-    <!-- Notificações (Toast) -->
+    <!-- Notifications -->
     <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] hidden">
         <div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
             <i class="fas fa-info-circle text-purple-400"></i>
@@ -133,39 +78,30 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CONFIGURAÇÃO DO FIREBASE ---
-        // COPIA O TEU OBJECTO DO FIREBASE CONSOLE E COLA AQUI:
+        // MANTENDO SUAS CHAVES DO FIREBASE
         const firebaseConfig = {
-              apiKey: "AIzaSyBhcrxANmCC8-3vns_db3qlKmhRZYh3yxQ",
-              authDomain: "masterapp-5ee3c.firebaseapp.com",
-              projectId: "masterapp-5ee3c",
-              storageBucket: "masterapp-5ee3c.firebasestorage.app",
-              messagingSenderId: "917602130149",
-  appId: "1:917602130149:web:9fb008b699cc3076591c0c"
+            apiKey: "AIzaSyBhcrxANmCC8-3vns_db3qlKmhRZYh3yxQ",
+            authDomain: "masterapp-5ee3c.firebaseapp.com",
+            projectId: "masterapp-5ee3c",
+            storageBucket: "masterapp-5ee3c.firebasestorage.app",
+            messagingSenderId: "917602130149",
+            appId: "1:917602130149:web:9fb008b699cc3076591c0c"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const masterAppId = 'master-app-production-v1';
+        const masterAppId = 'master-app-v2';
 
-        // Constantes Visuais
         const MASTER_PURPLE = "#BB00FF";
         const COLOR_PALETTE = [MASTER_PURPLE, "#ef4444", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#6366f1", "#06b6d4", "#f43f5e", "#64748b"];
-        const APP_ICON_SVG = `
-            <svg viewBox="0 0 100 100" class="w-full h-full fill-none stroke-current" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/>
-            </svg>
-        `;
+        const APP_ICON_SVG = `<svg viewBox="0 0 100 100" class="w-full h-full fill-none stroke-current"><path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/></svg>`;
 
-        // Estado do App
         let currentUser = null;
         let allTasks = [];
         let categoryColors = {};
@@ -173,84 +109,101 @@
         let activeTab = 'kanban';
         let editingTaskId = null;
         let selectedColor = COLOR_PALETTE[0];
+        let isRegistering = false;
 
-        // INICIAR APLICAÇÃO
+        // INICIAR
         async function startApp() {
-            try {
-                // Autenticação Anónima para simplicidade inicial (cumpre a regra RULE 3)
-                await signInAnonymously(auth);
-                
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        const savedProfile = localStorage.getItem('master_profile');
-                        if (savedProfile) {
-                            currentUser = JSON.parse(savedProfile);
-                            if (!viewingUser) viewingUser = currentUser.username;
-                            renderDashboard();
-                            listenToCloudData();
-                        } else {
-                            renderAuth();
-                        }
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const session = localStorage.getItem('master_session');
+                    if (session) {
+                        currentUser = JSON.parse(session);
+                        viewingUser = currentUser.username;
+                        renderDashboard();
+                        listenToCloudData();
+                    } else {
+                        renderAuth();
                     }
-                });
-            } catch (err) {
-                console.error("Erro de Autenticação Firebase:", err);
-                renderAuth(); 
-            }
+                }
+            });
         }
 
-        // SINCRONIZAÇÃO EM TEMPO REAL (NUVEM)
+        // SINCRONIZAÇÃO NUVEM
         function listenToCloudData() {
             if (!auth.currentUser) return;
 
-            // Escuta de Tarefas (Públicas - Cumpre RULE 1 e 2)
+            // Tarefas
             const tasksRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks');
             onSnapshot(tasksRef, (snapshot) => {
                 allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderDashboard();
-            }, (error) => console.error("Erro ao ler tarefas:", error));
+            }, (err) => showToast("Erro ao sincronizar tarefas: " + err.message));
 
-            // Escuta de Cores de Categorias
+            // Cores
             const colorsRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'categories');
             onSnapshot(colorsRef, (snapshot) => {
-                snapshot.docs.forEach(doc => {
-                    categoryColors[doc.id] = doc.data().color;
-                });
+                snapshot.docs.forEach(doc => { categoryColors[doc.id] = doc.data().color; });
                 renderDashboard();
             });
         }
 
-        // --- RENDERIZAÇÃO DA INTERFACE ---
-
+        // TELA DE LOGIN / REGISTO
         window.renderAuth = () => {
             document.getElementById('app').innerHTML = `
                 <div class="min-h-screen flex items-center justify-center p-4">
-                    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100">
+                    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
                         <div class="text-center mb-8">
                             <div class="w-16 h-16 text-master mx-auto mb-4">${APP_ICON_SVG}</div>
-                            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">MasterApp</h1>
-                            <p class="text-slate-500 mt-2 text-sm font-medium italic">Seja Bem-vindo</p>
+                            <h1 class="text-3xl font-bold text-slate-800">MasterApp</h1>
+                            <p class="text-slate-500 mt-2">${isRegistering ? 'Cria a tua conta de aluno' : 'Entra no teu painel'}</p>
                         </div>
                         <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 pl-1">Identificador</label>
-                                <input type="text" id="auth-username" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Digite o seu nome">
+                            <input type="text" id="auth-username" class="w-full px-4 py-3 border rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Nome de Utilizador">
+                            <input type="password" id="auth-password" class="w-full px-4 py-3 border rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Palavra-passe">
+                            <button onclick="handleAuthAction()" class="w-full bg-master text-white py-3.5 rounded-2xl font-bold shadow-lg active:scale-95 transition">
+                                ${isRegistering ? 'Criar Conta Master' : 'Entrar Agora'}
+                            </button>
+                            <div class="text-center mt-4">
+                                <button onclick="toggleAuthMode()" class="text-sm text-master font-bold hover:underline">
+                                    ${isRegistering ? 'Já tenho conta. Entrar' : 'Não tens conta? Regista-te'}
+                                </button>
                             </div>
-                            <button onclick="handleLogin()" class="w-full bg-master text-white py-3.5 rounded-2xl font-bold shadow-xl shadow-purple-200 active:scale-95 transition">Aceder ao MasterApp</button>
                         </div>
                     </div>
                 </div>
             `;
         };
 
-        window.handleLogin = () => {
-            const name = document.getElementById('auth-username').value.trim();
-            if (name) {
-                currentUser = { username: name };
-                viewingUser = name;
-                localStorage.setItem('master_profile', JSON.stringify(currentUser));
+        window.toggleAuthMode = () => { isRegistering = !isRegistering; renderAuth(); };
+
+        window.handleAuthAction = async () => {
+            const user = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-password').value;
+
+            if (!user || !pass) return showToast("Preenche todos os campos.");
+
+            try {
+                const userRef = doc(db, 'artifacts', masterAppId, 'public', 'data', 'users', user.toLowerCase());
+                const userDoc = await getDoc(userRef);
+
+                if (isRegistering) {
+                    if (userDoc.exists()) return showToast("Este nome já está em uso.");
+                    await setDoc(userRef, { username: user, password: pass });
+                    showToast("Conta criada!");
+                } else {
+                    if (!userDoc.exists() || userDoc.data().password !== pass) {
+                        return showToast("Utilizador ou senha incorretos.");
+                    }
+                }
+
+                currentUser = { username: user };
+                viewingUser = user;
+                localStorage.setItem('master_session', JSON.stringify(currentUser));
                 renderDashboard();
                 listenToCloudData();
+            } catch (err) {
+                showToast("Erro: " + err.message);
             }
         };
 
@@ -260,239 +213,139 @@
             const userList = [...new Set(allTasks.map(t => t.owner)), currentUser.username].sort();
 
             document.getElementById('app').innerHTML = `
-                <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
+                <nav class="bg-white border-b sticky top-0 z-50">
                     <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 text-master">${APP_ICON_SVG}</div>
-                            <span class="font-bold text-xl tracking-tight hidden sm:block">MasterApp</span>
-                        </div>
-                        
+                        <div class="flex items-center gap-3"><div class="w-8 h-8 text-master">${APP_ICON_SVG}</div><span class="font-bold text-xl hidden sm:block">MasterApp</span></div>
                         <div class="flex items-center gap-4">
-                            <!-- Dropdown de Projetos -->
                             <div class="relative group h-16 flex items-center">
-                                <button class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition">
+                                <button class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full font-bold">
                                     <span class="w-6 h-6 bg-master text-white rounded-full flex items-center justify-center text-[10px]">${viewingUser.charAt(0).toUpperCase()}</span>
-                                    <span class="hidden xs:block">Projeto: ${viewingUser}</span>
-                                    <i class="fas fa-chevron-down text-[10px] opacity-40"></i>
+                                    <span>Projeto: ${viewingUser}</span>
+                                    <i class="fas fa-chevron-down text-[10px]"></i>
                                 </button>
-                                <div class="absolute right-0 top-full w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 hidden group-hover:block overflow-hidden z-[100] animate-in slide-in-from-top-2 duration-200">
-                                    <div class="p-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border-b">Explorar Projetos:</div>
+                                <div class="absolute right-0 top-full w-60 bg-white rounded-2xl shadow-2xl border hidden group-hover:block overflow-hidden z-[100]">
+                                    <div class="p-3 text-[10px] font-bold text-slate-400 uppercase bg-slate-50 border-b">Projetos Ativos:</div>
                                     <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                        ${userList.map(user => `
-                                            <button onclick="switchProject('${user}')" class="w-full text-left px-5 py-3.5 text-sm hover:bg-purple-50 transition ${viewingUser === user ? 'text-master font-bold bg-purple-50/50' : 'text-slate-600'}">
-                                                ${user} ${user === currentUser.username ? '(O meu)' : ''}
+                                        ${userList.map(u => `
+                                            <button onclick="switchProject('${u}')" class="w-full text-left px-5 py-3.5 text-sm hover:bg-purple-50 ${viewingUser === u ? 'text-master font-bold' : ''}">
+                                                ${u} ${u === currentUser.username ? '(Eu)' : ''}
                                             </button>
                                         `).join('')}
                                     </div>
                                 </div>
                             </div>
-                            <button onclick="askLogout()" class="text-slate-400 hover:text-red-500 p-2 transition"><i class="fas fa-sign-out-alt"></i></button>
+                            <button onclick="askLogout()" class="text-slate-400 hover:text-red-500 p-2"><i class="fas fa-sign-out-alt"></i></button>
                         </div>
                     </div>
                 </nav>
 
                 <main class="max-w-7xl mx-auto px-4 py-8">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                        <div>
-                            <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">${isOwner ? 'O Meu Quadro' : `Projeto de ${viewingUser}`}</h2>
-                            <p class="text-slate-500 text-sm mt-1">Organização impecável em qualquer lugar.</p>
-                        </div>
-                        <div class="flex items-center bg-slate-200 p-1 rounded-2xl shadow-inner w-fit">
-                            <button onclick="switchTab('categories')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : 'text-slate-600'}">Categorias</button>
-                            <button onclick="switchTab('kanban')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : 'text-slate-600'}">Kanban</button>
+                        <h2 class="text-3xl font-extrabold text-slate-800">${isOwner ? 'O Meu Quadro' : `Projeto de ${viewingUser}`}</h2>
+                        <div class="flex items-center bg-slate-200 p-1 rounded-2xl shadow-inner">
+                            <button onclick="switchTab('categories')" class="px-6 py-2.5 rounded-xl text-sm font-bold ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : ''}">Categorias</button>
+                            <button onclick="switchTab('kanban')" class="px-6 py-2.5 rounded-xl text-sm font-bold ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : ''}">Kanban</button>
                         </div>
                     </div>
 
-                    ${isOwner ? `
-                        <button onclick="openAddTaskModal()" class="mb-8 bg-master text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-purple-200 hover-master transition transform active:scale-95">
-                            <i class="fas fa-plus mr-2"></i> Adicionar Tarefa
-                        </button>
-                    ` : `
-                        <div class="mb-8 p-5 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 text-amber-700 text-sm">
-                            <i class="fas fa-lock opacity-50"></i>
-                            <span>Está a visualizar o projeto de <b>${viewingUser}</b>. Edição bloqueada.</span>
-                        </div>
-                    `}
-
-                    <div id="main-content" class="${activeTab === 'kanban' ? 'overflow-hidden' : ''}">
-                        ${activeTab === 'kanban' ? renderKanban() : renderCategories()}
-                    </div>
+                    ${isOwner ? `<button onclick="openAddTaskModal()" class="mb-8 bg-master text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover-master transition">Adicionar Tarefa</button>` : ''}
+                    <div id="main-content">${activeTab === 'kanban' ? renderKanban() : renderCategories()}</div>
                 </main>
 
-                <!-- Task Modal -->
+                <!-- Modal Task -->
                 <div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
-                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
-                        <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-                            <h3 class="text-xl font-bold text-slate-800" id="modal-title">Nova Tarefa</h3>
-                            <button onclick="closeTaskModal()" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
-                        </div>
+                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onclick="event.stopPropagation()">
+                        <div class="p-6 border-b flex justify-between items-center"><h3 class="text-xl font-bold" id="modal-title"></h3><button onclick="closeTaskModal()" class="text-2xl text-slate-400">&times;</button></div>
                         <div class="p-8 space-y-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">O que precisa de fazer? *</label>
-                                <input type="text" id="new-title" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Descreva a tarefa">
-                            </div>
+                            <input type="text" id="new-title" class="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 ring-master" placeholder="O que precisa de fazer?">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div class="relative">
-                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Categoria *</label>
-                                    <input type="text" id="new-category" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Ex: Estudo, Trabalho">
-                                    <div class="mt-4">
-                                        <div class="flex flex-wrap gap-2.5">
-                                            ${COLOR_PALETTE.map(hex => `<div onclick="pickColor('${hex}')" class="color-dot w-7 h-7" style="background-color: ${hex}" data-color="${hex}"></div>`).join('')}
-                                        </div>
+                                    <input type="text" id="new-category" class="w-full px-4 py-3 border rounded-xl outline-none" placeholder="Categoria">
+                                    <div class="mt-4 flex flex-wrap gap-2">
+                                        ${COLOR_PALETTE.map(hex => `<div onclick="pickColor('${hex}')" class="color-dot w-7 h-7" style="background-color: ${hex}" data-color="${hex}"></div>`).join('')}
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Data Limite</label>
-                                    <input type="date" id="new-date" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master">
-                                </div>
+                                <input type="date" id="new-date" class="w-full px-4 py-3 border rounded-xl">
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estado Atual *</label>
-                                <select id="new-status" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master bg-white">
-                                    <option value="não iniciada">Não iniciada</option>
-                                    <option value="em progresso">Em progresso</option>
-                                    <option value="completa">Completa</option>
-                                </select>
-                            </div>
+                            <select id="new-status" class="w-full px-4 py-3 border rounded-xl"><option value="não iniciada">Não iniciada</option><option value="em progresso">Em progresso</option><option value="completa">Completa</option></select>
                         </div>
-                        <div class="p-6 bg-slate-50 flex gap-4 border-t">
-                            <button onclick="closeTaskModal()" class="flex-1 font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
-                            <button onclick="saveTask()" class="flex-1 bg-master text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-purple-200">Guardar Tarefa</button>
-                        </div>
+                        <div class="p-6 bg-slate-50 flex gap-4"><button onclick="closeTaskModal()" class="flex-1 font-bold text-slate-400">Cancelar</button><button onclick="saveTask()" class="flex-1 bg-master text-white py-3.5 rounded-2xl font-bold">Guardar</button></div>
                     </div>
                 </div>
             `;
             pickColor(selectedColor);
         };
 
-        // RENDER KANBAN (COM ROLAGEM HORIZONTAL)
+        // KANBAN RENDER
         function renderKanban() {
             const userTasks = allTasks.filter(t => t.owner === viewingUser);
-            const cols = [
-                { id: 'não iniciada', label: 'Não Iniciada', color: 'bg-red-500' },
-                { id: 'em progresso', label: 'Em Progresso', color: 'bg-amber-500' },
-                { id: 'completa', label: 'Completa', color: 'bg-emerald-500' }
-            ];
-
-            return `
-                <div class="kanban-container custom-scrollbar px-2">
-                    ${cols.map(col => `
-                        <div class="kanban-column bg-slate-200/40 p-5 rounded-3xl flex flex-col gap-5 border border-slate-200/60 backdrop-blur-sm">
-                            <div class="flex items-center justify-between px-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-3 h-3 rounded-full ${col.color} shadow-sm"></div>
-                                    <h3 class="font-bold text-slate-500 uppercase text-[12px] tracking-widest">${col.label}</h3>
-                                </div>
-                                <span class="bg-white text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
-                                    ${userTasks.filter(t => t.status === col.id).length}
-                                </span>
-                            </div>
-                            <div class="flex flex-col gap-4 overflow-y-auto custom-scrollbar">
-                                ${userTasks.filter(t => t.status === col.id).map(t => renderTaskCard(t)).join('')}
-                                ${userTasks.filter(t => t.status === col.id).length === 0 ? `
-                                    <div class="py-12 text-center text-slate-300 text-xs italic">Sem tarefas pendentes.</div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+            const cols = [{id:'não iniciada',l:'Não Iniciada',c:'bg-red-500'},{id:'em progresso',l:'Em Progresso',c:'bg-amber-500'},{id:'completa',l:'Completa',c:'bg-emerald-500'}];
+            return `<div class="kanban-container custom-scrollbar px-2">${cols.map(col => `
+                <div class="kanban-column bg-slate-200/40 p-5 rounded-3xl flex flex-col gap-5 border">
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full ${col.c}"></div><h3 class="font-bold text-slate-500 text-[12px] uppercase">${col.l}</h3></div></div>
+                    <div class="flex flex-col gap-4 overflow-y-auto">${userTasks.filter(t => t.status === col.id).map(t => renderTaskCard(t)).join('')}</div>
+                </div>`).join('')}</div>`;
         }
 
-        // RENDER CATEGORIAS
+        // CATEGORIES RENDER
         function renderCategories() {
             const userTasks = allTasks.filter(t => t.owner === viewingUser);
             const cats = [...new Set(userTasks.map(t => t.category))].sort();
-
-            return cats.length === 0 ? `<div class="text-center py-24 text-slate-400 italic">Comece por criar uma categoria e tarefa.</div>` : `
-                <div class="space-y-10">
-                    ${cats.map(cat => {
-                        const color = categoryColors[cat] || '#94a3b8';
-                        return `
-                        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                            <div class="px-8 py-4 border-b font-bold flex items-center gap-3" style="background-color: ${color}08; color: ${color};">
-                                <i class="fas fa-tag text-[10px] opacity-70"></i>
-                                ${cat}
-                            </div>
-                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                ${userTasks.filter(t => t.category === cat).map(t => renderTaskCard(t)).join('')}
-                            </div>
-                        </div>
-                    `;}).join('')}
-                </div>
-            `;
+            return `<div class="space-y-10">${cats.map(cat => {
+                const color = categoryColors[cat] || '#94a3b8';
+                return `<div class="bg-white rounded-3xl shadow-sm border overflow-hidden">
+                    <div class="px-8 py-4 border-b font-bold" style="background-color:${color}08;color:${color}">${cat}</div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${userTasks.filter(t => t.category === cat).map(t => renderTaskCard(t)).join('')}</div>
+                </div>`;
+            }).join('')}</div>`;
         }
 
-        // CARD DE TAREFA
+        // TASK CARD
         function renderTaskCard(t) {
             const isOwner = currentUser.username === viewingUser;
-            const statusConfig = {
-                'não iniciada': 'bg-red-50 text-red-600 border-red-100',
-                'em progresso': 'bg-amber-50 text-amber-700 border-amber-100',
-                'completa': 'bg-emerald-50 text-emerald-700 border-emerald-100'
-            };
-            const catColor = categoryColors[t.category] || '#94a3b8';
-
-            return `
-                <div class="task-card bg-white p-5 rounded-2xl border border-slate-100 shadow-sm group">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="text-[10px] font-bold uppercase px-3 py-1 rounded-full border ${statusConfig[t.status]}">${t.status}</span>
-                        ${isOwner ? `
-                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="openEditTaskModal('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-master hover:bg-purple-50 transition"><i class="fas fa-edit text-xs"></i></button>
-                                <button onclick="askDeleteTask('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition"><i class="fas fa-trash-alt text-xs"></i></button>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-sm mb-4 leading-relaxed">${t.title}</h4>
-                    <div class="flex items-center justify-between text-[10px] border-t border-slate-50 pt-4 mt-2">
-                        <span class="text-slate-400 font-medium"><i class="far fa-calendar-alt mr-1.5 opacity-60"></i>${t.date || 'Sem data'}</span>
-                        <span class="font-bold px-2.5 py-1 rounded-lg" style="color:${catColor}; background-color:${catColor}15"># ${t.category}</span>
-                    </div>
-                </div>
-            `;
+            const config = {'não iniciada':'bg-red-50 text-red-600 border-red-100','em progresso':'bg-amber-50 text-amber-700 border-amber-100','completa':'bg-emerald-50 text-emerald-700 border-emerald-100'};
+            return `<div class="task-card bg-white p-5 rounded-2xl border shadow-sm group">
+                <div class="flex justify-between mb-4"><span class="text-[9px] font-bold uppercase px-3 py-1 rounded-full border ${config[t.status]}">${t.status}</span>
+                ${isOwner ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition"><button onclick="openEditTaskModal('${t.id}')"><i class="fas fa-edit text-slate-400"></i></button><button onclick="askDeleteTask('${t.id}')"><i class="fas fa-trash text-red-400"></i></button></div>` : ''}</div>
+                <h4 class="font-bold text-sm mb-4">${t.title}</h4>
+                <div class="flex items-center justify-between text-[10px] border-t pt-4"><span>${t.date || 'Sem data'}</span><span class="font-bold px-2 py-0.5 rounded" style="color:${categoryColors[t.category]};background:${categoryColors[t.category]}15"># ${t.category}</span></div>
+            </div>`;
         }
 
-        // --- AÇÕES FIRESTORE (NUVEM) ---
-
+        // AÇÕES NUVEM
         window.saveTask = async () => {
             const title = document.getElementById('new-title').value.trim();
             const category = document.getElementById('new-category').value.trim();
             const date = document.getElementById('new-date').value;
             const status = document.getElementById('new-status').value;
 
-            if (!title || !category) return showToast("Título e Categoria são obrigatórios!");
+            if (!title || !category) return showToast("Título e Categoria são obrigatórios.");
 
-            // Guardar cor da categoria (Público)
-            await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', category), { color: selectedColor });
+            try {
+                await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', category), { color: selectedColor });
+                const taskData = { owner: currentUser.username, title, category, date, status, updated: Date.now() };
 
-            const taskData = { 
-                owner: currentUser.username, 
-                title, 
-                category, 
-                date, 
-                status, 
-                lastUpdate: Date.now() 
-            };
-
-            if (editingTaskId) {
-                await updateDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', editingTaskId), taskData);
-                showToast("Tarefa atualizada!");
-            } else {
-                await addDoc(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), taskData);
-                showToast("Tarefa guardada na nuvem!");
+                if (editingTaskId) {
+                    await updateDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', editingTaskId), taskData);
+                } else {
+                    await addDoc(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), taskData);
+                }
+                closeTaskModal();
+                showToast("Sincronizado!");
+            } catch (err) {
+                showToast("Erro ao guardar: " + err.message);
             }
-
-            closeTaskModal();
         };
 
         window.deleteTaskCloud = async (id) => {
-            await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));
-            closeConfirmModal();
-            showToast("Tarefa removida permanentemente.");
+            try {
+                await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));
+                closeConfirmModal();
+                showToast("Removido.");
+            } catch (err) { showToast("Erro ao apagar."); }
         };
 
-        // --- UTILITÁRIOS ---
+        // UTILS
         window.switchProject = (u) => { viewingUser = u; renderDashboard(); };
         window.switchTab = (t) => { activeTab = t; renderDashboard(); };
         window.pickColor = (hex) => {
@@ -503,7 +356,7 @@
             const t = document.getElementById('toast');
             document.getElementById('toast-message').innerText = msg;
             t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 3000);
+            setTimeout(() => t.classList.add('hidden'), 4000);
         };
         window.openAddTaskModal = () => {
             editingTaskId = null;
@@ -513,7 +366,6 @@
             document.getElementById('new-category').value = "";
             document.getElementById('new-date').value = "";
             document.getElementById('new-status').value = "não iniciada";
-            pickColor(COLOR_PALETTE[0]);
         };
         window.openEditTaskModal = (id) => {
             const t = allTasks.find(x => x.id === id);
@@ -529,19 +381,15 @@
         window.closeTaskModal = () => document.getElementById('task-modal').classList.remove('modal-active');
         window.askDeleteTask = (id) => {
             const modal = document.getElementById('confirm-modal');
-            document.getElementById('confirm-title').innerText = "Eliminar Tarefa?";
-            document.getElementById('confirm-text').innerText = "Esta ação removerá o item para todos os utilizadores.";
+            document.getElementById('confirm-title').innerText = "Apagar Tarefa?";
+            document.getElementById('confirm-text').innerText = "Remover permanentemente do MasterApp.";
             const btn = document.getElementById('confirm-action-btn');
             btn.onclick = () => deleteTaskCloud(id);
             modal.classList.add('modal-active');
         };
         window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.remove('modal-active');
-        window.askLogout = () => {
-            localStorage.removeItem('master_profile');
-            location.reload();
-        };
+        window.askLogout = () => { localStorage.removeItem('master_session'); location.reload(); };
 
-        // Início
         startApp();
     </script>
 </body>
