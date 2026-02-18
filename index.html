@@ -1,564 +1,548 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="pt-pt">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.3">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterApp - Gestor de Tarefas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Cores MasterApp (#BB00FF) */
+        .bg-master { background-color: #BB00FF; }
+        .text-master { color: #BB00FF; }
+        .border-master { border-color: #BB00FF; }
+        .ring-master:focus { --tw-ring-color: #BB00FF; }
+        .hover-master:hover { opacity: 0.9; }
+
+        /* Estrutura de Rolagem Horizontal do Kanban */
+        .kanban-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 1.5rem;
+            padding-bottom: 1.5rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .kanban-column {
+            flex: 0 0 320px;
+            scroll-snap-align: center;
+            min-height: 70vh;
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            .kanban-column {
+                flex: 0 0 380px;
+                scroll-snap-align: start;
+            }
+        }
+
+        .task-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(187, 0, 255, 0.15);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .modal-active {
+            display: flex !important;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            border: 2px solid transparent;
+        }
+        .color-dot.active {
+            border-color: #1e293b;
+            transform: scale(1.2);
+        }
+
+        .category-dropdown {
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 110;
+        }
+    </style>
 </head>
-<body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="pt-pt"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;MasterApp - Gestor de Tarefas&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap');</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Inter', sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Cores MasterApp (#BB00FF) */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.bg-master { background-color: #BB00FF; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.text-master { color: #BB00FF; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.border-master { border-color: #BB00FF; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.ring-master:focus { --tw-ring-color: #BB00FF; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.hover-master:hover { opacity: 0.9; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Estrutura de Rolagem Horizontal do Kanban */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.kanban-container {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow-x: auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>scroll-snap-type: x mandatory;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 1.5rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding-bottom: 1.5rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>-webkit-overflow-scrolling: touch;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.kanban-column {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex: 0 0 320px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>scroll-snap-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 70vh;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>@media (min-width: 768px) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.kanban-column {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>flex: 0 0 380px;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>scroll-snap-align: start;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.task-card {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: transform 0.2s ease, box-shadow 0.2s ease;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.task-card:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-2px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 4px 12px rgba(187, 0, 255, 0.15);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.custom-scrollbar::-webkit-scrollbar {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 6px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.custom-scrollbar::-webkit-scrollbar-track {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f1f1f1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.custom-scrollbar::-webkit-scrollbar-thumb {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #cbd5e1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.modal-active {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex !important;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>animation: fadeIn 0.2s ease-out;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>@keyframes fadeIn {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>from { opacity: 0; }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>to { opacity: 1; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-dot {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 24px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 24px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: transform 0.2s, border-color 0.2s;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid transparent;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.color-dot.active {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #1e293b;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: scale(1.2);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.category-dropdown {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-height: 150px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow-y: auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>z-index: 110;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body class="bg-slate-50 text-slate-900 custom-scrollbar"&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="app"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- Dashboard placeholder - Aparece durante o carregamento --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="min-h-screen flex items-center justify-center"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="text-center"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="w-16 h-16 text-master mx-auto mb-4 animate-bounce"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;svg viewBox="0 0 100 100" class="fill-none stroke-current" xmlns="http://www.w3.org/2000/svg"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/svg&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="text-slate-400 font-medium animate-pulse"&gt;A iniciar MasterApp...&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Modal de Confirmação Customizado --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden items-center justify-center p-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;h3 class="text-xl font-bold mb-2 text-slate-800" id="confirm-title"&gt;Confirmar?&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-slate-500 mb-6" id="confirm-text"&gt;&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="flex gap-3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-slate-100 rounded-xl font-bold"&gt;Cancelar&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;button id="confirm-action-btn" class="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100"&gt;Confirmar&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Notificações (Toast) --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] hidden"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;i class="fas fa-info-circle text-purple-400"&gt;&lt;/i&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;span id="toast-message"&gt;&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Firebase SDK --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// --- CONFIGURAÇÃO DO FIREBASE ---</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// COPIA O TEU OBJECTO DO FIREBASE CONSOLE E COLA AQUI:</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const firebaseConfig = {</p>
-<p class="p1"><span class="Apple-converted-space">              </span>apiKey: "AIzaSyBhcrxANmCC8-3vns_db3qlKmhRZYh3yxQ",</p>
-<p class="p1"><span class="Apple-converted-space">              </span>authDomain: "masterapp-5ee3c.firebaseapp.com",</p>
-<p class="p1"><span class="Apple-converted-space">              </span>projectId: "masterapp-5ee3c",</p>
-<p class="p1"><span class="Apple-converted-space">              </span>storageBucket: "masterapp-5ee3c.firebasestorage.app",</p>
-<p class="p1"><span class="Apple-converted-space">              </span>messagingSenderId: "917602130149",</p>
-<p class="p1"><span class="Apple-converted-space">  </span>appId: "1:917602130149:web:9fb008b699cc3076591c0c"</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>const app = initializeApp(firebaseConfig);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const auth = getAuth(app);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const db = getFirestore(app);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const masterAppId = 'master-app-production-v1';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Constantes Visuais</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const MASTER_PURPLE = "#BB00FF";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const COLOR_PALETTE = [MASTER_PURPLE, "#ef4444", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#6366f1", "#06b6d4", "#f43f5e", "#64748b"];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const APP_ICON_SVG = `</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;svg viewBox="0 0 100 100" class="w-full h-full fill-none stroke-current" xmlns="http://www.w3.org/2000/svg"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/svg&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Estado do App</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let currentUser = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let allTasks = [];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let categoryColors = {};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let viewingUser = "";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let activeTab = 'kanban';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let editingTaskId = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let selectedColor = COLOR_PALETTE[0];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// INICIAR APLICAÇÃO</p>
-<p class="p1"><span class="Apple-converted-space">        </span>async function startApp() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>// Autenticação Anónima para simplicidade inicial (cumpre a regra RULE 3)</p>
-<p class="p1"><span class="Apple-converted-space">                </span>await signInAnonymously(auth);</p>
-<p class="p2"><span class="Apple-converted-space">                </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>onAuthStateChanged(auth, (user) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (user) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>const savedProfile = localStorage.getItem('master_profile');</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>if (savedProfile) {</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>currentUser = JSON.parse(savedProfile);</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>if (!viewingUser) viewingUser = currentUser.username;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>renderDashboard();</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>listenToCloudData();</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>renderAuth();</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p1"><span class="Apple-converted-space">            </span>} catch (err) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>console.error("Erro de Autenticação Firebase:", err);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderAuth();<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// SINCRONIZAÇÃO EM TEMPO REAL (NUVEM)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function listenToCloudData() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!auth.currentUser) return;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Escuta de Tarefas (Públicas - Cumpre RULE 1 e 2)</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const tasksRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>onSnapshot(tasksRef, (snapshot) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>allTasks = snapshot.docs.map(doc =&gt; ({ id: doc.id, ...doc.data() }));</p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderDashboard();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}, (error) =&gt; console.error("Erro ao ler tarefas:", error));</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Escuta de Cores de Categorias</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const colorsRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'categories');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>onSnapshot(colorsRef, (snapshot) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>snapshot.docs.forEach(doc =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>categoryColors[doc.id] = doc.data().color;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderDashboard();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// --- RENDERIZAÇÃO DA INTERFACE ---</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.renderAuth = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('app').innerHTML = `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="min-h-screen flex items-center justify-center p-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="text-center mb-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="w-16 h-16 text-master mx-auto mb-4"&gt;${APP_ICON_SVG}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h1 class="text-3xl font-bold text-slate-800 tracking-tight"&gt;MasterApp&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-500 mt-2 text-sm font-medium italic"&gt;Seja Bem-vindo&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="space-y-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 pl-1"&gt;Identificador&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="text" id="auth-username" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Digite o seu nome"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="handleLogin()" class="w-full bg-master text-white py-3.5 rounded-2xl font-bold shadow-xl shadow-purple-200 active:scale-95 transition"&gt;Aceder ao MasterApp&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.handleLogin = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const name = document.getElementById('auth-username').value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (name) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>currentUser = { username: name };</p>
-<p class="p1"><span class="Apple-converted-space">                </span>viewingUser = name;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>localStorage.setItem('master_profile', JSON.stringify(currentUser));</p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderDashboard();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>listenToCloudData();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.renderDashboard = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!currentUser) return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const isOwner = currentUser.username === viewingUser;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const userList = [...new Set(allTasks.map(t =&gt; t.owner)), currentUser.username].sort();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('app').innerHTML = `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;nav class="bg-white border-b sticky top-0 z-50 shadow-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-center gap-3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="w-8 h-8 text-master"&gt;${APP_ICON_SVG}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="font-bold text-xl tracking-tight hidden sm:block"&gt;MasterApp&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p2"><span class="Apple-converted-space">                        </span></p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-center gap-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;!-- Dropdown de Projetos --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="relative group h-16 flex items-center"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;button class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="w-6 h-6 bg-master text-white rounded-full flex items-center justify-center text-[10px]"&gt;${viewingUser.charAt(0).toUpperCase()}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;span class="hidden xs:block"&gt;Projeto: ${viewingUser}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;i class="fas fa-chevron-down text-[10px] opacity-40"&gt;&lt;/i&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="absolute right-0 top-full w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 hidden group-hover:block overflow-hidden z-[100] animate-in slide-in-from-top-2 duration-200"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="p-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border-b"&gt;Explorar Projetos:&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="max-h-[300px] overflow-y-auto custom-scrollbar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>${userList.map(user =&gt; `</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>&lt;button onclick="switchProject('${user}')" class="w-full text-left px-5 py-3.5 text-sm hover:bg-purple-50 transition ${viewingUser === user ? 'text-master font-bold bg-purple-50/50' : 'text-slate-600'}"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                                </span>${user} ${user === currentUser.username ? '(O meu)' : ''}</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>`).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="askLogout()" class="text-slate-400 hover:text-red-500 p-2 transition"&gt;&lt;i class="fas fa-sign-out-alt"&gt;&lt;/i&gt;&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/nav&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;main class="max-w-7xl mx-auto px-4 py-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h2 class="text-3xl font-extrabold text-slate-800 tracking-tight"&gt;${isOwner ? 'O Meu Quadro' : `Projeto de ${viewingUser}`}&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;p class="text-slate-500 text-sm mt-1"&gt;Organização impecável em qualquer lugar.&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-center bg-slate-200 p-1 rounded-2xl shadow-inner w-fit"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="switchTab('categories')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : 'text-slate-600'}"&gt;Categorias&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="switchTab('kanban')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : 'text-slate-600'}"&gt;Kanban&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>${isOwner ? `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;button onclick="openAddTaskModal()" class="mb-8 bg-master text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-purple-200 hover-master transition transform active:scale-95"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i class="fas fa-plus mr-2"&gt;&lt;/i&gt; Adicionar Tarefa</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>` : `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="mb-8 p-5 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 text-amber-700 text-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;i class="fas fa-lock opacity-50"&gt;&lt;/i&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span&gt;Está a visualizar o projeto de &lt;b&gt;${viewingUser}&lt;/b&gt;. Edição bloqueada.&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="main-content" class="${activeTab === 'kanban' ? 'overflow-hidden' : ''}"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>${activeTab === 'kanban' ? renderKanban() : renderCategories()}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/main&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;!-- Task Modal --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] hidden items-center justify-center p-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="p-6 border-b flex justify-between items-center bg-slate-50/50"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;h3 class="text-xl font-bold text-slate-800" id="modal-title"&gt;Nova Tarefa&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="closeTaskModal()" class="text-2xl text-slate-400 hover:text-slate-600"&gt;&amp;times;&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="p-8 space-y-6"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"&gt;O que precisa de fazer? *&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;input type="text" id="new-title" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Descreva a tarefa"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="grid grid-cols-1 md:grid-cols-2 gap-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="relative"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"&gt;Categoria *&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="text" id="new-category" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Ex: Estudo, Trabalho"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="mt-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;div class="flex flex-wrap gap-2.5"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                            </span>${COLOR_PALETTE.map(hex =&gt; `&lt;div onclick="pickColor('${hex}')" class="color-dot w-7 h-7" style="background-color: ${hex}" data-color="${hex}"&gt;&lt;/div&gt;`).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"&gt;Data Limite&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;input type="date" id="new-date" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"&gt;Estado Atual *&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;select id="new-status" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master bg-white"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;option value="não iniciada"&gt;Não iniciada&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;option value="em progresso"&gt;Em progresso&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;option value="completa"&gt;Completa&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="p-6 bg-slate-50 flex gap-4 border-t"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="closeTaskModal()" class="flex-1 font-bold text-slate-400 hover:text-slate-600"&gt;Cancelar&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;button onclick="saveTask()" class="flex-1 bg-master text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-purple-200"&gt;Guardar Tarefa&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>pickColor(selectedColor);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// RENDER KANBAN (COM ROLAGEM HORIZONTAL)</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function renderKanban() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const userTasks = allTasks.filter(t =&gt; t.owner === viewingUser);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const cols = [</p>
-<p class="p1"><span class="Apple-converted-space">                </span>{ id: 'não iniciada', label: 'Não Iniciada', color: 'bg-red-500' },</p>
-<p class="p1"><span class="Apple-converted-space">                </span>{ id: 'em progresso', label: 'Em Progresso', color: 'bg-amber-500' },</p>
-<p class="p1"><span class="Apple-converted-space">                </span>{ id: 'completa', label: 'Completa', color: 'bg-emerald-500' }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>return `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="kanban-container custom-scrollbar px-2"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>${cols.map(col =&gt; `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="kanban-column bg-slate-200/40 p-5 rounded-3xl flex flex-col gap-5 border border-slate-200/60 backdrop-blur-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex items-center justify-between px-1"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="flex items-center gap-3"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="w-3 h-3 rounded-full ${col.color} shadow-sm"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;h3 class="font-bold text-slate-500 uppercase text-[12px] tracking-widest"&gt;${col.label}&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;span class="bg-white text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>${userTasks.filter(t =&gt; t.status === col.id).length}</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex flex-col gap-4 overflow-y-auto custom-scrollbar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>${userTasks.filter(t =&gt; t.status === col.id).map(t =&gt; renderTaskCard(t)).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>${userTasks.filter(t =&gt; t.status === col.id).length === 0 ? `</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="py-12 text-center text-slate-300 text-xs italic"&gt;Sem tarefas pendentes.&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>` : ''}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// RENDER CATEGORIAS</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function renderCategories() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const userTasks = allTasks.filter(t =&gt; t.owner === viewingUser);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const cats = [...new Set(userTasks.map(t =&gt; t.category))].sort();</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>return cats.length === 0 ? `&lt;div class="text-center py-24 text-slate-400 italic"&gt;Comece por criar uma categoria e tarefa.&lt;/div&gt;` : `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="space-y-10"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>${cats.map(cat =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>const color = categoryColors[cat] || '#94a3b8';</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>return `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="px-8 py-4 border-b font-bold flex items-center gap-3" style="background-color: ${color}08; color: ${color};"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;i class="fas fa-tag text-[10px] opacity-70"&gt;&lt;/i&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>${cat}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>${userTasks.filter(t =&gt; t.category === cat).map(t =&gt; renderTaskCard(t)).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`;}).join('')}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// CARD DE TAREFA</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function renderTaskCard(t) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const isOwner = currentUser.username === viewingUser;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const statusConfig = {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>'não iniciada': 'bg-red-50 text-red-600 border-red-100',</p>
-<p class="p1"><span class="Apple-converted-space">                </span>'em progresso': 'bg-amber-50 text-amber-700 border-amber-100',</p>
-<p class="p1"><span class="Apple-converted-space">                </span>'completa': 'bg-emerald-50 text-emerald-700 border-emerald-100'</p>
-<p class="p1"><span class="Apple-converted-space">            </span>};</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const catColor = categoryColors[t.category] || '#94a3b8';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>return `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="task-card bg-white p-5 rounded-2xl border border-slate-100 shadow-sm group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex justify-between items-start mb-4"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span class="text-[10px] font-bold uppercase px-3 py-1 rounded-full border ${statusConfig[t.status]}"&gt;${t.status}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>${isOwner ? `</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="flex gap-1 opacity-0 group-hover:opacity-100 transition"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;button onclick="openEditTaskModal('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-master hover:bg-purple-50 transition"&gt;&lt;i class="fas fa-edit text-xs"&gt;&lt;/i&gt;&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;button onclick="askDeleteTask('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition"&gt;&lt;i class="fas fa-trash-alt text-xs"&gt;&lt;/i&gt;&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>` : ''}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;h4 class="font-bold text-slate-800 text-sm mb-4 leading-relaxed"&gt;${t.title}&lt;/h4&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex items-center justify-between text-[10px] border-t border-slate-50 pt-4 mt-2"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span class="text-slate-400 font-medium"&gt;&lt;i class="far fa-calendar-alt mr-1.5 opacity-60"&gt;&lt;/i&gt;${t.date || 'Sem data'}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span class="font-bold px-2.5 py-1 rounded-lg" style="color:${catColor}; background-color:${catColor}15"&gt;# ${t.category}&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// --- AÇÕES FIRESTORE (NUVEM) ---</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.saveTask = async () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const title = document.getElementById('new-title').value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const category = document.getElementById('new-category').value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const date = document.getElementById('new-date').value;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const status = document.getElementById('new-status').value;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (!title || !category) return showToast("Título e Categoria são obrigatórios!");</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Guardar cor da categoria (Público)</p>
-<p class="p1"><span class="Apple-converted-space">            </span>await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', category), { color: selectedColor });</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const taskData = {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>owner: currentUser.username,<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>title,<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>category,<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>date,<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>status,<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">                </span>lastUpdate: Date.now()<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (editingTaskId) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>await updateDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', editingTaskId), taskData);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>showToast("Tarefa atualizada!");</p>
-<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>await addDoc(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), taskData);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>showToast("Tarefa guardada na nuvem!");</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>closeTaskModal();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.deleteTaskCloud = async (id) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));</p>
-<p class="p1"><span class="Apple-converted-space">            </span>closeConfirmModal();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>showToast("Tarefa removida permanentemente.");</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// --- UTILITÁRIOS ---</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.switchProject = (u) =&gt; { viewingUser = u; renderDashboard(); };</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.switchTab = (t) =&gt; { activeTab = t; renderDashboard(); };</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.pickColor = (hex) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>selectedColor = hex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.querySelectorAll('.color-dot').forEach(d =&gt; d.classList.toggle('active', d.dataset.color === hex));</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.showToast = (msg) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const t = document.getElementById('toast');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('toast-message').innerText = msg;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>t.classList.remove('hidden');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; t.classList.add('hidden'), 3000);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.openAddTaskModal = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>editingTaskId = null;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('task-modal').classList.add('modal-active');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('modal-title').innerText = "Nova Tarefa";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-title').value = "";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-category').value = "";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-date').value = "";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-status').value = "não iniciada";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>pickColor(COLOR_PALETTE[0]);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.openEditTaskModal = (id) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const t = allTasks.find(x =&gt; x.id === id);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>editingTaskId = id;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>selectedColor = categoryColors[t.category] || COLOR_PALETTE[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('task-modal').classList.add('modal-active');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('modal-title').innerText = "Editar Tarefa";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-title').value = t.title;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-category').value = t.category;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-date').value = t.date;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('new-status').value = t.status;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.closeTaskModal = () =&gt; document.getElementById('task-modal').classList.remove('modal-active');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.askDeleteTask = (id) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const modal = document.getElementById('confirm-modal');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('confirm-title').innerText = "Eliminar Tarefa?";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('confirm-text').innerText = "Esta ação removerá o item para todos os utilizadores.";</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const btn = document.getElementById('confirm-action-btn');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.onclick = () =&gt; deleteTaskCloud(id);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>modal.classList.add('modal-active');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.closeConfirmModal = () =&gt; document.getElementById('confirm-modal').classList.remove('modal-active');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.askLogout = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>localStorage.removeItem('master_profile');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>location.reload();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Início</p>
-<p class="p1"><span class="Apple-converted-space">        </span>startApp();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+<body class="bg-slate-50 text-slate-900 custom-scrollbar">
+
+    <div id="app">
+        <!-- Dashboard placeholder - Aparece durante o carregamento -->
+        <div class="min-h-screen flex items-center justify-center">
+            <div class="text-center">
+                <div class="w-16 h-16 text-master mx-auto mb-4 animate-bounce">
+                    <svg viewBox="0 0 100 100" class="fill-none stroke-current" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/>
+                    </svg>
+                </div>
+                <p class="text-slate-400 font-medium animate-pulse">A iniciar MasterApp...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Customizado -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
+            <h3 class="text-xl font-bold mb-2 text-slate-800" id="confirm-title">Confirmar?</h3>
+            <p class="text-slate-500 mb-6" id="confirm-text"></p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-slate-100 rounded-xl font-bold">Cancelar</button>
+                <button id="confirm-action-btn" class="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-100">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificações (Toast) -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] hidden">
+        <div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <i class="fas fa-info-circle text-purple-400"></i>
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- CONFIGURAÇÃO DO FIREBASE ---
+        // COPIA O TEU OBJECTO DO FIREBASE CONSOLE E COLA AQUI:
+        const firebaseConfig = {
+              apiKey: "AIzaSyBhcrxANmCC8-3vns_db3qlKmhRZYh3yxQ",
+              authDomain: "masterapp-5ee3c.firebaseapp.com",
+              projectId: "masterapp-5ee3c",
+              storageBucket: "masterapp-5ee3c.firebasestorage.app",
+              messagingSenderId: "917602130149",
+  appId: "1:917602130149:web:9fb008b699cc3076591c0c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const masterAppId = 'master-app-production-v1';
+
+        // Constantes Visuais
+        const MASTER_PURPLE = "#BB00FF";
+        const COLOR_PALETTE = [MASTER_PURPLE, "#ef4444", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#6366f1", "#06b6d4", "#f43f5e", "#64748b"];
+        const APP_ICON_SVG = `
+            <svg viewBox="0 0 100 100" class="w-full h-full fill-none stroke-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/>
+            </svg>
+        `;
+
+        // Estado do App
+        let currentUser = null;
+        let allTasks = [];
+        let categoryColors = {};
+        let viewingUser = "";
+        let activeTab = 'kanban';
+        let editingTaskId = null;
+        let selectedColor = COLOR_PALETTE[0];
+
+        // INICIAR APLICAÇÃO
+        async function startApp() {
+            try {
+                // Autenticação Anónima para simplicidade inicial (cumpre a regra RULE 3)
+                await signInAnonymously(auth);
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        const savedProfile = localStorage.getItem('master_profile');
+                        if (savedProfile) {
+                            currentUser = JSON.parse(savedProfile);
+                            if (!viewingUser) viewingUser = currentUser.username;
+                            renderDashboard();
+                            listenToCloudData();
+                        } else {
+                            renderAuth();
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error("Erro de Autenticação Firebase:", err);
+                renderAuth(); 
+            }
+        }
+
+        // SINCRONIZAÇÃO EM TEMPO REAL (NUVEM)
+        function listenToCloudData() {
+            if (!auth.currentUser) return;
+
+            // Escuta de Tarefas (Públicas - Cumpre RULE 1 e 2)
+            const tasksRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks');
+            onSnapshot(tasksRef, (snapshot) => {
+                allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderDashboard();
+            }, (error) => console.error("Erro ao ler tarefas:", error));
+
+            // Escuta de Cores de Categorias
+            const colorsRef = collection(db, 'artifacts', masterAppId, 'public', 'data', 'categories');
+            onSnapshot(colorsRef, (snapshot) => {
+                snapshot.docs.forEach(doc => {
+                    categoryColors[doc.id] = doc.data().color;
+                });
+                renderDashboard();
+            });
+        }
+
+        // --- RENDERIZAÇÃO DA INTERFACE ---
+
+        window.renderAuth = () => {
+            document.getElementById('app').innerHTML = `
+                <div class="min-h-screen flex items-center justify-center p-4">
+                    <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 text-master mx-auto mb-4">${APP_ICON_SVG}</div>
+                            <h1 class="text-3xl font-bold text-slate-800 tracking-tight">MasterApp</h1>
+                            <p class="text-slate-500 mt-2 text-sm font-medium italic">Seja Bem-vindo</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 pl-1">Identificador</label>
+                                <input type="text" id="auth-username" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Digite o seu nome">
+                            </div>
+                            <button onclick="handleLogin()" class="w-full bg-master text-white py-3.5 rounded-2xl font-bold shadow-xl shadow-purple-200 active:scale-95 transition">Aceder ao MasterApp</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        window.handleLogin = () => {
+            const name = document.getElementById('auth-username').value.trim();
+            if (name) {
+                currentUser = { username: name };
+                viewingUser = name;
+                localStorage.setItem('master_profile', JSON.stringify(currentUser));
+                renderDashboard();
+                listenToCloudData();
+            }
+        };
+
+        window.renderDashboard = () => {
+            if (!currentUser) return;
+            const isOwner = currentUser.username === viewingUser;
+            const userList = [...new Set(allTasks.map(t => t.owner)), currentUser.username].sort();
+
+            document.getElementById('app').innerHTML = `
+                <nav class="bg-white border-b sticky top-0 z-50 shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 text-master">${APP_ICON_SVG}</div>
+                            <span class="font-bold text-xl tracking-tight hidden sm:block">MasterApp</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-4">
+                            <!-- Dropdown de Projetos -->
+                            <div class="relative group h-16 flex items-center">
+                                <button class="flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full font-bold text-sm hover:bg-slate-200 transition">
+                                    <span class="w-6 h-6 bg-master text-white rounded-full flex items-center justify-center text-[10px]">${viewingUser.charAt(0).toUpperCase()}</span>
+                                    <span class="hidden xs:block">Projeto: ${viewingUser}</span>
+                                    <i class="fas fa-chevron-down text-[10px] opacity-40"></i>
+                                </button>
+                                <div class="absolute right-0 top-full w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 hidden group-hover:block overflow-hidden z-[100] animate-in slide-in-from-top-2 duration-200">
+                                    <div class="p-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border-b">Explorar Projetos:</div>
+                                    <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                        ${userList.map(user => `
+                                            <button onclick="switchProject('${user}')" class="w-full text-left px-5 py-3.5 text-sm hover:bg-purple-50 transition ${viewingUser === user ? 'text-master font-bold bg-purple-50/50' : 'text-slate-600'}">
+                                                ${user} ${user === currentUser.username ? '(O meu)' : ''}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="askLogout()" class="text-slate-400 hover:text-red-500 p-2 transition"><i class="fas fa-sign-out-alt"></i></button>
+                        </div>
+                    </div>
+                </nav>
+
+                <main class="max-w-7xl mx-auto px-4 py-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                        <div>
+                            <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">${isOwner ? 'O Meu Quadro' : `Projeto de ${viewingUser}`}</h2>
+                            <p class="text-slate-500 text-sm mt-1">Organização impecável em qualquer lugar.</p>
+                        </div>
+                        <div class="flex items-center bg-slate-200 p-1 rounded-2xl shadow-inner w-fit">
+                            <button onclick="switchTab('categories')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : 'text-slate-600'}">Categorias</button>
+                            <button onclick="switchTab('kanban')" class="px-6 py-2.5 rounded-xl text-sm font-bold transition ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : 'text-slate-600'}">Kanban</button>
+                        </div>
+                    </div>
+
+                    ${isOwner ? `
+                        <button onclick="openAddTaskModal()" class="mb-8 bg-master text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-purple-200 hover-master transition transform active:scale-95">
+                            <i class="fas fa-plus mr-2"></i> Adicionar Tarefa
+                        </button>
+                    ` : `
+                        <div class="mb-8 p-5 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-4 text-amber-700 text-sm">
+                            <i class="fas fa-lock opacity-50"></i>
+                            <span>Está a visualizar o projeto de <b>${viewingUser}</b>. Edição bloqueada.</span>
+                        </div>
+                    `}
+
+                    <div id="main-content" class="${activeTab === 'kanban' ? 'overflow-hidden' : ''}">
+                        ${activeTab === 'kanban' ? renderKanban() : renderCategories()}
+                    </div>
+                </main>
+
+                <!-- Task Modal -->
+                <div id="task-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] hidden items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+                        <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                            <h3 class="text-xl font-bold text-slate-800" id="modal-title">Nova Tarefa</h3>
+                            <button onclick="closeTaskModal()" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+                        </div>
+                        <div class="p-8 space-y-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">O que precisa de fazer? *</label>
+                                <input type="text" id="new-title" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Descreva a tarefa">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="relative">
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Categoria *</label>
+                                    <input type="text" id="new-category" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master" placeholder="Ex: Estudo, Trabalho">
+                                    <div class="mt-4">
+                                        <div class="flex flex-wrap gap-2.5">
+                                            ${COLOR_PALETTE.map(hex => `<div onclick="pickColor('${hex}')" class="color-dot w-7 h-7" style="background-color: ${hex}" data-color="${hex}"></div>`).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Data Limite</label>
+                                    <input type="date" id="new-date" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Estado Atual *</label>
+                                <select id="new-status" class="w-full px-4 py-3 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master bg-white">
+                                    <option value="não iniciada">Não iniciada</option>
+                                    <option value="em progresso">Em progresso</option>
+                                    <option value="completa">Completa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-slate-50 flex gap-4 border-t">
+                            <button onclick="closeTaskModal()" class="flex-1 font-bold text-slate-400 hover:text-slate-600">Cancelar</button>
+                            <button onclick="saveTask()" class="flex-1 bg-master text-white py-3.5 rounded-2xl font-bold shadow-lg shadow-purple-200">Guardar Tarefa</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            pickColor(selectedColor);
+        };
+
+        // RENDER KANBAN (COM ROLAGEM HORIZONTAL)
+        function renderKanban() {
+            const userTasks = allTasks.filter(t => t.owner === viewingUser);
+            const cols = [
+                { id: 'não iniciada', label: 'Não Iniciada', color: 'bg-red-500' },
+                { id: 'em progresso', label: 'Em Progresso', color: 'bg-amber-500' },
+                { id: 'completa', label: 'Completa', color: 'bg-emerald-500' }
+            ];
+
+            return `
+                <div class="kanban-container custom-scrollbar px-2">
+                    ${cols.map(col => `
+                        <div class="kanban-column bg-slate-200/40 p-5 rounded-3xl flex flex-col gap-5 border border-slate-200/60 backdrop-blur-sm">
+                            <div class="flex items-center justify-between px-1">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-3 h-3 rounded-full ${col.color} shadow-sm"></div>
+                                    <h3 class="font-bold text-slate-500 uppercase text-[12px] tracking-widest">${col.label}</h3>
+                                </div>
+                                <span class="bg-white text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
+                                    ${userTasks.filter(t => t.status === col.id).length}
+                                </span>
+                            </div>
+                            <div class="flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+                                ${userTasks.filter(t => t.status === col.id).map(t => renderTaskCard(t)).join('')}
+                                ${userTasks.filter(t => t.status === col.id).length === 0 ? `
+                                    <div class="py-12 text-center text-slate-300 text-xs italic">Sem tarefas pendentes.</div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // RENDER CATEGORIAS
+        function renderCategories() {
+            const userTasks = allTasks.filter(t => t.owner === viewingUser);
+            const cats = [...new Set(userTasks.map(t => t.category))].sort();
+
+            return cats.length === 0 ? `<div class="text-center py-24 text-slate-400 italic">Comece por criar uma categoria e tarefa.</div>` : `
+                <div class="space-y-10">
+                    ${cats.map(cat => {
+                        const color = categoryColors[cat] || '#94a3b8';
+                        return `
+                        <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div class="px-8 py-4 border-b font-bold flex items-center gap-3" style="background-color: ${color}08; color: ${color};">
+                                <i class="fas fa-tag text-[10px] opacity-70"></i>
+                                ${cat}
+                            </div>
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${userTasks.filter(t => t.category === cat).map(t => renderTaskCard(t)).join('')}
+                            </div>
+                        </div>
+                    `;}).join('')}
+                </div>
+            `;
+        }
+
+        // CARD DE TAREFA
+        function renderTaskCard(t) {
+            const isOwner = currentUser.username === viewingUser;
+            const statusConfig = {
+                'não iniciada': 'bg-red-50 text-red-600 border-red-100',
+                'em progresso': 'bg-amber-50 text-amber-700 border-amber-100',
+                'completa': 'bg-emerald-50 text-emerald-700 border-emerald-100'
+            };
+            const catColor = categoryColors[t.category] || '#94a3b8';
+
+            return `
+                <div class="task-card bg-white p-5 rounded-2xl border border-slate-100 shadow-sm group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[10px] font-bold uppercase px-3 py-1 rounded-full border ${statusConfig[t.status]}">${t.status}</span>
+                        ${isOwner ? `
+                            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="openEditTaskModal('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-master hover:bg-purple-50 transition"><i class="fas fa-edit text-xs"></i></button>
+                                <button onclick="askDeleteTask('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition"><i class="fas fa-trash-alt text-xs"></i></button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-4 leading-relaxed">${t.title}</h4>
+                    <div class="flex items-center justify-between text-[10px] border-t border-slate-50 pt-4 mt-2">
+                        <span class="text-slate-400 font-medium"><i class="far fa-calendar-alt mr-1.5 opacity-60"></i>${t.date || 'Sem data'}</span>
+                        <span class="font-bold px-2.5 py-1 rounded-lg" style="color:${catColor}; background-color:${catColor}15"># ${t.category}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- AÇÕES FIRESTORE (NUVEM) ---
+
+        window.saveTask = async () => {
+            const title = document.getElementById('new-title').value.trim();
+            const category = document.getElementById('new-category').value.trim();
+            const date = document.getElementById('new-date').value;
+            const status = document.getElementById('new-status').value;
+
+            if (!title || !category) return showToast("Título e Categoria são obrigatórios!");
+
+            // Guardar cor da categoria (Público)
+            await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', category), { color: selectedColor });
+
+            const taskData = { 
+                owner: currentUser.username, 
+                title, 
+                category, 
+                date, 
+                status, 
+                lastUpdate: Date.now() 
+            };
+
+            if (editingTaskId) {
+                await updateDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', editingTaskId), taskData);
+                showToast("Tarefa atualizada!");
+            } else {
+                await addDoc(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), taskData);
+                showToast("Tarefa guardada na nuvem!");
+            }
+
+            closeTaskModal();
+        };
+
+        window.deleteTaskCloud = async (id) => {
+            await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));
+            closeConfirmModal();
+            showToast("Tarefa removida permanentemente.");
+        };
+
+        // --- UTILITÁRIOS ---
+        window.switchProject = (u) => { viewingUser = u; renderDashboard(); };
+        window.switchTab = (t) => { activeTab = t; renderDashboard(); };
+        window.pickColor = (hex) => {
+            selectedColor = hex;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === hex));
+        };
+        window.showToast = (msg) => {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 3000);
+        };
+        window.openAddTaskModal = () => {
+            editingTaskId = null;
+            document.getElementById('task-modal').classList.add('modal-active');
+            document.getElementById('modal-title').innerText = "Nova Tarefa";
+            document.getElementById('new-title').value = "";
+            document.getElementById('new-category').value = "";
+            document.getElementById('new-date').value = "";
+            document.getElementById('new-status').value = "não iniciada";
+            pickColor(COLOR_PALETTE[0]);
+        };
+        window.openEditTaskModal = (id) => {
+            const t = allTasks.find(x => x.id === id);
+            editingTaskId = id;
+            selectedColor = categoryColors[t.category] || COLOR_PALETTE[0];
+            document.getElementById('task-modal').classList.add('modal-active');
+            document.getElementById('modal-title').innerText = "Editar Tarefa";
+            document.getElementById('new-title').value = t.title;
+            document.getElementById('new-category').value = t.category;
+            document.getElementById('new-date').value = t.date;
+            document.getElementById('new-status').value = t.status;
+        };
+        window.closeTaskModal = () => document.getElementById('task-modal').classList.remove('modal-active');
+        window.askDeleteTask = (id) => {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-title').innerText = "Eliminar Tarefa?";
+            document.getElementById('confirm-text').innerText = "Esta ação removerá o item para todos os utilizadores.";
+            const btn = document.getElementById('confirm-action-btn');
+            btn.onclick = () => deleteTaskCloud(id);
+            modal.classList.add('modal-active');
+        };
+        window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.remove('modal-active');
+        window.askLogout = () => {
+            localStorage.removeItem('master_profile');
+            location.reload();
+        };
+
+        // Início
+        startApp();
+    </script>
 </body>
 </html>
