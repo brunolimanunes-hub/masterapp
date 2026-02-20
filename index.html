@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         
-        /* MasterApp Purple Theme */
+        /* Tema MasterApp Purple (#BB00FF) */
         .bg-master { background-color: #BB00FF; }
         .text-master { color: #BB00FF; }
         .border-master { border-color: #BB00FF; }
@@ -64,16 +64,16 @@
 <body class="bg-slate-50 text-slate-900 custom-scrollbar">
 
     <div id="app">
-        <!-- Loader de Inicialização -->
+        <!-- Tela de Carregamento -->
         <div class="min-h-screen flex items-center justify-center bg-slate-50">
             <div class="text-center p-6">
                 <div class="w-16 h-16 text-master mx-auto mb-4 animate-bounce">
                     <svg viewBox="0 0 100 100" class="fill-none stroke-current"><path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/></svg>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800 mb-2 tracking-tight">MasterApp</h2>
-                <p id="loading-status" class="text-slate-400 text-sm animate-pulse italic">A sincronizar o seu universo produtivo...</p>
+                <p id="loading-status" class="text-slate-400 text-sm animate-pulse italic">Sincronizando com a nuvem Master...</p>
                 <div id="connection-error" class="hidden mt-8 p-4 bg-red-50 rounded-xl border border-red-100 max-w-xs mx-auto">
-                    <p class="text-red-600 text-xs mb-3 font-medium text-center">A conexão está a demorar. Verifique se a 'Autenticação Anônima' está ativa no Firebase.</p>
+                    <p class="text-red-600 text-xs mb-3 font-medium text-center">A conexão está demorando. Verifique a Autenticação Anônima no Firebase.</p>
                     <button onclick="location.reload()" class="bg-white text-red-600 text-[10px] px-4 py-2 rounded-lg font-bold shadow-sm border border-red-200 w-full">RECARREGAR APLICAÇÃO</button>
                 </div>
             </div>
@@ -82,8 +82,8 @@
 
     <!-- Modais Genéricos -->
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
-            <h3 class="text-xl font-bold mb-2 text-slate-800" id="confirm-title">Ação Requerida</h3>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center border border-slate-100">
+            <h3 class="text-xl font-bold mb-2 text-slate-800" id="confirm-title">Confirmação</h3>
             <p class="text-slate-500 mb-6 text-sm" id="confirm-text"></p>
             <div class="flex gap-3">
                 <button onclick="closeConfirmModal()" class="flex-1 px-4 py-3 bg-slate-100 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition">Cancelar</button>
@@ -100,12 +100,13 @@
         </div>
     </div>
 
+    <!-- Firebase Implementation -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // CONFIGURAÇÃO FIREBASE
+        // CONFIGURAÇÃO FIREBASE (Usando suas chaves)
         const firebaseConfig = {
             apiKey: "AIzaSyBhcrxANmCC8-3vns_db3qlKmhRZYh3yxQ",
             authDomain: "masterapp-5ee3c.firebaseapp.com",
@@ -118,17 +119,17 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const masterAppId = 'master-app-final-prod-v1';
+        const masterAppId = 'master-app-final-prod-v2'; // Mantendo a estrutura de dados privada
 
-        // Estilos e Identidade
+        // Constantes Visuais
         const MASTER_PURPLE = "#BB00FF";
         const COLOR_PALETTE = [MASTER_PURPLE, "#ef4444", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#6366f1", "#06b6d4", "#f43f5e", "#64748b"];
         const APP_ICON_SVG = `<svg viewBox="0 0 100 100" class="w-full h-full fill-none stroke-current"><path d="M20 70V30L50 55L80 30V70" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M65 75L75 85L95 65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"/></svg>`;
 
-        // Estado Global
+        // Estado do App
         let currentUser = null;
         let allTasks = [];
-        let categoryColors = {};
+        let categoryData = []; // [{ name, color, owner }]
         let viewingUser = "";
         let activeTab = 'kanban';
         let editingTaskId = null;
@@ -157,22 +158,22 @@
                         }
                     }
                 });
-            } catch (err) { console.error("Firebase Init Error:", err); }
+            } catch (err) { console.error("Erro na conexão:", err); }
         }
 
         // --- SINCRONIZAÇÃO NUVEM ---
         function listenToCloudData() {
             if (!auth.currentUser) return;
 
-            // Escuta Tarefas (Públicas)
+            // Escuta Tarefas (Todas para permitir ver projetos de outros)
             onSnapshot(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), (snapshot) => {
                 allTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderDashboard();
             });
 
-            // Escuta Categorias (Cores)
+            // Escuta Categorias (Todas para carregar cores ao visualizar outros quadros)
             onSnapshot(collection(db, 'artifacts', masterAppId, 'public', 'data', 'categories'), (snapshot) => {
-                snapshot.docs.forEach(doc => { categoryColors[doc.id] = doc.data().color; });
+                categoryData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderDashboard();
             });
         }
@@ -190,7 +191,7 @@
                         <div class="space-y-4">
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Usuário</label>
-                                <input type="text" id="auth-username" class="w-full px-5 py-3.5 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master transition" placeholder="O seu nome">
+                                <input type="text" id="auth-username" class="w-full px-5 py-3.5 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master transition" placeholder="Seu nome">
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Senha</label>
@@ -215,18 +216,18 @@
         window.handleAuthAction = async () => {
             const user = document.getElementById('auth-username').value.trim();
             const pass = document.getElementById('auth-password').value;
-            if (!user || !pass) return showToast("Preencha todos os dados.");
+            if (!user || !pass) return showToast("Preencha todos os campos.");
 
             try {
                 const userRef = doc(db, 'artifacts', masterAppId, 'public', 'data', 'users', user.toLowerCase());
                 const userDoc = await getDoc(userRef);
 
                 if (isRegistering) {
-                    if (userDoc.exists()) return showToast("Este nome já está registrado.");
+                    if (userDoc.exists()) return showToast("Este usuário já está registrado.");
                     await setDoc(userRef, { username: user, password: pass });
-                    showToast("Conta criada! Bem-vindo.");
+                    showToast("Conta criada com sucesso!");
                 } else {
-                    if (!userDoc.exists() || userDoc.data().password !== pass) return showToast("Dados de acesso inválidos.");
+                    if (!userDoc.exists() || userDoc.data().password !== pass) return showToast("Usuário ou senha incorretos.");
                 }
 
                 currentUser = { username: user };
@@ -258,12 +259,12 @@
                                     <i class="fas fa-chevron-down opacity-30"></i>
                                 </button>
                                 <div class="absolute right-0 top-full w-64 bg-white rounded-3xl shadow-2xl border border-slate-100 hidden group-hover:block overflow-hidden z-[100] animate-in slide-in-from-top-2 duration-200">
-                                    <div class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border-b">Quadros Disponíveis:</div>
+                                    <div class="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 border-b">Quadros Master:</div>
                                     <div class="max-h-[350px] overflow-y-auto custom-scrollbar">
                                         ${userList.map(u => `
-                                            <button onclick="switchProject('${u}')" class="w-full text-left px-5 py-4 text-sm hover:bg-purple-50 transition ${viewingUser === u ? 'text-master font-bold bg-purple-50/30' : 'text-slate-600'}">
+                                            <button onclick="switchProject('${u}')" class="w-full text-left px-5 py-4 text-sm hover:bg-purple-50 transition ${viewingUser === u ? 'text-master font-bold bg-purple-50/50' : 'text-slate-600'}">
                                                 <i class="fas ${u === currentUser.username ? 'fa-user-circle' : 'fa-folder-open'} mr-2 opacity-40"></i>
-                                                ${u} ${u === currentUser.username ? '(O meu)' : ''}
+                                                ${u} ${u === currentUser.username ? '(Meu)' : ''}
                                             </button>
                                         `).join('')}
                                     </div>
@@ -277,23 +278,23 @@
                 <main class="max-w-7xl mx-auto px-4 py-10">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                         <div>
-                            <h2 class="text-4xl font-extrabold text-slate-800 tracking-tight">${isOwner ? 'O Meu Quadro' : `Quadro de ${viewingUser}`}</h2>
-                            <p class="text-slate-400 text-sm mt-1 font-medium">Gestão inteligente e colaborativa.</p>
+                            <h2 class="text-4xl font-extrabold text-slate-800 tracking-tight">${isOwner ? 'Meu Quadro' : `Quadro de ${viewingUser}`}</h2>
+                            <p class="text-slate-400 text-sm mt-1 font-medium italic">Gestão focada em resultados.</p>
                         </div>
                         <div class="flex items-center bg-slate-200 p-1 rounded-2xl shadow-inner w-fit">
-                            <button onclick="switchTab('categories')" class="px-8 py-3 rounded-xl text-sm font-bold transition ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : 'text-slate-500 hover:text-slate-700'}">Categorias</button>
-                            <button onclick="switchTab('kanban')" class="px-8 py-3 rounded-xl text-sm font-bold transition ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : 'text-slate-500 hover:text-slate-700'}">Kanban</button>
+                            <button onclick="switchTab('categories')" class="px-8 py-3 rounded-xl text-sm font-bold transition ${activeTab === 'categories' ? 'bg-white shadow-md text-master' : 'text-slate-500'}">Categorias</button>
+                            <button onclick="switchTab('kanban')" class="px-8 py-3 rounded-xl text-sm font-bold transition ${activeTab === 'kanban' ? 'bg-white shadow-md text-master' : 'text-slate-500'}">Kanban</button>
                         </div>
                     </div>
 
                     ${isOwner ? `
                         <button onclick="openAddTaskModal()" class="mb-10 bg-master text-white px-10 py-5 rounded-2xl font-bold shadow-2xl shadow-purple-200 hover-master transition transform active:scale-95 flex items-center gap-3">
-                            <i class="fas fa-plus-circle text-lg"></i> CRIAR NOVA TAREFA
+                            <i class="fas fa-plus-circle text-lg"></i> NOVA TAREFA
                         </button>
                     ` : `
-                        <div class="mb-10 p-6 bg-purple-50 border border-purple-100 rounded-3xl flex items-center gap-4 text-purple-700 text-sm shadow-sm">
-                            <i class="fas fa-eye text-lg"></i>
-                            <span>Está a explorar as tarefas de <b>${viewingUser}</b>. Edição restrita ao autor.</span>
+                        <div class="mb-10 p-6 bg-amber-50 border border-amber-100 rounded-3xl flex items-center gap-4 text-amber-700 text-sm shadow-sm">
+                            <i class="fas fa-lock opacity-50"></i>
+                            <span>Visualizando o projeto de <b>${viewingUser}</b>. Edição restrita ao autor.</span>
                         </div>
                     `}
 
@@ -302,7 +303,7 @@
                     </div>
                 </main>
 
-                <!-- Modal Consolidado (Tarefas e Categorias) -->
+                <!-- Modal de Tarefa -->
                 <div id="task-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[100] hidden items-center justify-center p-4" onclick="handleOutsideModalClick(event)">
                     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
                         <div class="p-8 border-b flex justify-between items-center bg-slate-50/50">
@@ -312,11 +313,11 @@
                         <div class="p-10 space-y-8">
                             <div class="space-y-2">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Título da Tarefa *</label>
-                                <input type="text" id="new-title" class="w-full px-5 py-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master text-lg font-medium transition" placeholder="O que precisa de ser feito?">
+                                <input type="text" id="new-title" class="w-full px-5 py-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master text-lg font-medium transition" placeholder="O que precisa ser feito?">
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                                 <div class="relative">
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2">Categoria *</label>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2">Minhas Categorias *</label>
                                     <input type="text" id="new-category" 
                                         onfocus="showCategorySuggestions()" 
                                         oninput="filterCategorySuggestions(this.value)"
@@ -324,23 +325,22 @@
                                         class="w-full px-5 py-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master font-medium transition" 
                                         placeholder="Escolha ou digite">
                                     
-                                    <!-- Dropdown Dinâmico -->
                                     <div id="category-suggestions" class="hidden category-dropdown custom-scrollbar"></div>
 
                                     <div class="mt-6">
-                                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-3">Atribuir Identidade (Cor) *</label>
+                                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1 mb-3">Definir Cor *</label>
                                         <div class="flex flex-wrap gap-3">
                                             ${COLOR_PALETTE.map(hex => `<div onclick="pickColor('${hex}')" class="color-dot" style="background-color: ${hex}" data-color="${hex}"></div>`).join('')}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Data Limite</label>
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Prazo Máximo</label>
                                     <input type="date" id="new-date" class="w-full px-5 py-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master font-medium transition">
                                 </div>
                             </div>
                             <div class="space-y-2">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Estado do Fluxo *</label>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Estado da Tarefa *</label>
                                 <select id="new-status" class="w-full px-5 py-4 border border-slate-200 rounded-2xl outline-none focus:ring-2 ring-master bg-white font-medium cursor-pointer">
                                     <option value="não iniciada">Não iniciada</option>
                                     <option value="em progresso">Em progresso</option>
@@ -350,7 +350,7 @@
                         </div>
                         <div class="p-8 bg-slate-50 flex gap-4 border-t border-slate-100">
                             <button onclick="closeTaskModal()" class="flex-1 py-4 font-bold text-slate-400 hover:text-slate-600 transition">CANCELAR</button>
-                            <button onclick="saveTask()" class="flex-1 bg-master text-white py-4 rounded-2xl font-bold shadow-xl shadow-purple-100 hover-master transition transform active:scale-95">SINCRONIZAR NA NUVEM</button>
+                            <button onclick="saveTask()" class="flex-1 bg-master text-white py-4 rounded-2xl font-bold shadow-xl shadow-purple-100 hover-master transition transform active:scale-95">SINCRONIZAR</button>
                         </div>
                     </div>
                 </div>
@@ -358,43 +358,48 @@
             pickColor(selectedColor);
         };
 
-        // --- LÓGICA DE CATEGORIAS ---
+        // --- LÓGICA DE CATEGORIAS PRIVADAS ---
         window.showCategorySuggestions = () => {
             const container = document.getElementById('category-suggestions');
-            const categories = Object.keys(categoryColors).sort();
-            if (categories.length === 0) return container.classList.add('hidden');
-            renderCategoryList(categories);
+            // FILTRO: Mostrar apenas categorias que pertencem ao usuário logado
+            const myCats = categoryData.filter(c => c.owner === currentUser.username).sort((a,b) => a.name.localeCompare(b.name));
+            if (myCats.length === 0) return container.classList.add('hidden');
+            renderCategoryList(myCats);
             container.classList.remove('hidden');
         };
 
         window.filterCategorySuggestions = (val) => {
-            const categories = Object.keys(categoryColors).filter(cat => 
-                cat.toLowerCase().includes(val.toLowerCase())
-            ).sort();
             const container = document.getElementById('category-suggestions');
-            if (categories.length === 0) {
+            const filtered = categoryData.filter(c => 
+                c.owner === currentUser.username && 
+                c.name.toLowerCase().includes(val.toLowerCase())
+            ).sort((a,b) => a.name.localeCompare(b.name));
+
+            if (filtered.length === 0) {
                 container.classList.add('hidden');
             } else {
-                renderCategoryList(categories);
+                renderCategoryList(filtered);
                 container.classList.remove('hidden');
             }
-            if (categoryColors[val.trim()]) pickColor(categoryColors[val.trim()]);
+
+            const match = filtered.find(c => c.name.toLowerCase() === val.trim().toLowerCase());
+            if (match) pickColor(match.color);
         };
 
         function renderCategoryList(list) {
             const container = document.getElementById('category-suggestions');
             container.innerHTML = list.map(cat => `
-                <div onclick="selectCategory('${cat}')" class="flex items-center gap-4 p-4 hover:bg-purple-50 cursor-pointer border-b border-slate-50 last:border-0 transition group">
-                    <div class="w-4 h-4 rounded-full shadow-sm" style="background-color: ${categoryColors[cat]}"></div>
-                    <span class="text-sm text-slate-700 font-bold group-hover:text-master">${cat}</span>
+                <div onclick="selectCategory('${cat.name}', '${cat.color}')" class="flex items-center gap-4 p-4 hover:bg-purple-50 cursor-pointer border-b border-slate-50 last:border-0 transition group">
+                    <div class="w-4 h-4 rounded-full shadow-sm" style="background-color: ${cat.color}"></div>
+                    <span class="text-sm text-slate-700 font-bold group-hover:text-master">${cat.name}</span>
                 </div>
             `).join('');
         }
 
-        window.selectCategory = (name) => {
+        window.selectCategory = (name, color) => {
             document.getElementById('new-category').value = name;
             document.getElementById('category-suggestions').classList.add('hidden');
-            if (categoryColors[name]) pickColor(categoryColors[name]);
+            pickColor(color);
         };
 
         window.handleOutsideModalClick = (e) => {
@@ -411,14 +416,14 @@
                 <div class="kanban-column bg-slate-200/40 p-6 rounded-[2rem] flex flex-col gap-6 border border-slate-200/50 backdrop-blur-sm">
                     <div class="flex items-center justify-between px-1">
                         <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 rounded-full ${col.c} shadow-sm shadow-slate-300"></div>
+                            <div class="w-3.5 h-3.5 rounded-full ${col.c} shadow-sm"></div>
                             <h3 class="font-bold text-slate-500 uppercase text-[12px] tracking-widest">${col.l}</h3>
                         </div>
                         <span class="bg-white text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">${userTasks.filter(t => t.status === col.id).length}</span>
                     </div>
                     <div class="flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
                         ${userTasks.filter(t => t.status === col.id).map(t => renderTaskCard(t)).join('')}
-                        ${userTasks.filter(t => t.status === col.id).length === 0 ? `<div class="py-16 text-center text-slate-300 text-[11px] italic font-medium">Aguardando tarefas...</div>` : ''}
+                        ${userTasks.filter(t => t.status === col.id).length === 0 ? `<div class="py-16 text-center text-slate-300 text-[11px] italic">Sem tarefas pendentes</div>` : ''}
                     </div>
                 </div>`).join('')}</div>`;
         }
@@ -426,10 +431,11 @@
         function renderCategories() {
             const userTasks = allTasks.filter(t => t.owner === viewingUser);
             const cats = [...new Set(userTasks.map(t => t.category))].sort();
-            return cats.length === 0 ? `<div class="text-center py-32 text-slate-300 italic font-medium">Crie categorias para organizar o seu trabalho.</div>` : `<div class="space-y-12">${cats.map(cat => {
-                const color = categoryColors[cat] || '#94a3b8';
+            return cats.length === 0 ? `<div class="text-center py-32 text-slate-300 italic">Crie tarefas para ver o agrupamento por categoria.</div>` : `<div class="space-y-12">${cats.map(cat => {
+                const colorObj = categoryData.find(c => c.name === cat && c.owner === viewingUser) || { color: '#94a3b8' };
+                const color = colorObj.color;
                 return `<div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="px-10 py-5 border-b font-extrabold flex items-center gap-3 tracking-tight" style="background-color: ${color}08; color: ${color}; text-shadow: 0 0 1px ${color}20;">
+                    <div class="px-10 py-5 border-b font-extrabold flex items-center gap-3 tracking-tight" style="background-color: ${color}08; color: ${color};">
                         <i class="fas fa-hashtag text-[10px] opacity-50"></i>${cat}
                     </div>
                     <div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">${userTasks.filter(t => t.category === cat).map(t => renderTaskCard(t)).join('')}</div>
@@ -439,12 +445,16 @@
         function renderTaskCard(t) {
             const isOwner = currentUser.username === viewingUser;
             const statusColors = {'não iniciada':'bg-red-500','em progresso':'bg-amber-500','completa':'bg-emerald-500'};
-            const catColor = categoryColors[t.category] || '#94a3b8';
             
+            // Busca cor específica do dono desta tarefa
+            const colorObj = categoryData.find(c => c.name === t.category && c.owner === t.owner) || { color: '#94a3b8' };
+            const catColor = colorObj.color;
+
             return `<div class="task-card bg-white p-6 rounded-3xl border border-slate-100 shadow-sm group">
                 <div class="flex justify-between mb-5">
-                    <div class="w-3 h-3 rounded-full ${statusColors[t.status]} shadow-sm shadow-slate-200" title="${t.status}"></div>
-                ${isOwner ? `<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition"><button onclick="openEditTaskModal('${t.id}')" class="p-2 text-slate-400 hover:text-master transition"><i class="fas fa-edit"></i></button><button onclick="askDeleteTask('${t.id}')" class="p-2 text-slate-400 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button></div>` : ''}</div>
+                    <!-- Bolinha de status conforme solicitado (sem texto) -->
+                    <div class="w-3.5 h-3.5 rounded-full ${statusColors[t.status]} shadow-sm" title="${t.status}"></div>
+                ${isOwner ? `<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition"><button onclick="openEditTaskModal('${t.id}')" class="p-2 hover:text-master"><i class="fas fa-edit"></i></button><button onclick="askDeleteTask('${t.id}')" class="p-2 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}</div>
                 <h4 class="font-bold text-slate-800 text-[15px] mb-5 leading-relaxed tracking-tight">${t.title}</h4>
                 <div class="flex items-center justify-between text-[10px] border-t border-slate-50 pt-5 mt-2">
                     <span class="text-slate-400 font-bold tracking-tight"><i class="far fa-calendar-alt mr-1.5 opacity-60"></i>${t.date || 'SEM PRAZO'}</span>
@@ -453,35 +463,46 @@
             </div>`;
         }
 
-        // --- AÇÕES FIRESTORE ---
+        // --- AÇÕES NUVEM ---
 
         window.saveTask = async () => {
             const title = document.getElementById('new-title').value.trim();
             const category = document.getElementById('new-category').value.trim();
             const date = document.getElementById('new-date').value;
             const status = document.getElementById('new-status').value;
-            if (!title || !category) return showToast("Título e Categoria obrigatórios!");
+            if (!title || !category) return showToast("Título e Categoria são obrigatórios.");
 
             try {
-                await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', category), { color: selectedColor });
-                const taskData = { owner: currentUser.username, title, category, date, status, updated: Date.now() };
+                // Identificador único de categoria para evitar misturar cores entre usuários
+                const catDocId = `${currentUser.username.toLowerCase()}_${category.toLowerCase()}`;
+                await setDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'categories', catDocId), { 
+                    name: category, 
+                    color: selectedColor,
+                    owner: currentUser.username
+                });
+
+                const taskData = { 
+                    owner: currentUser.username, 
+                    title, category, date, status, 
+                    updated: Date.now() 
+                };
+
                 if (editingTaskId) await updateDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', editingTaskId), taskData);
                 else await addDoc(collection(db, 'artifacts', masterAppId, 'public', 'data', 'tasks'), taskData);
+                
                 closeTaskModal();
-                showToast("Sincronizado Master!");
-            } catch (err) { showToast("Erro Nuvem: " + err.message); }
+                showToast("Dados sincronizados com sucesso!");
+            } catch (err) { showToast("Erro ao salvar: " + err.message); }
         };
 
         window.deleteTaskCloud = async (id) => {
-            try {
-                await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));
-                closeConfirmModal();
-                showToast("Tarefa eliminada.");
-            } catch (err) { showToast("Erro ao apagar."); }
+            await deleteDoc(doc(db, 'artifacts', masterAppId, 'public', 'data', 'tasks', id));
+            closeConfirmModal();
+            showToast("Tarefa removida.");
         };
 
         // --- UTILITÁRIOS ---
-        window.switchProject = (u) => { viewingUser = u; renderDashboard(); showToast(`Quadro: ${u}`); };
+        window.switchProject = (u) => { viewingUser = u; renderDashboard(); showToast(`Quadro de ${u}`); };
         window.switchTab = (t) => { activeTab = t; renderDashboard(); };
         window.pickColor = (hex) => {
             selectedColor = hex;
@@ -506,7 +527,8 @@
         window.openEditTaskModal = (id) => {
             const t = allTasks.find(x => x.id === id);
             editingTaskId = id;
-            selectedColor = categoryColors[t.category] || COLOR_PALETTE[0];
+            const colorObj = categoryData.find(c => c.name === t.category && c.owner === t.owner) || { color: COLOR_PALETTE[0] };
+            selectedColor = colorObj.color;
             document.getElementById('task-modal').classList.add('modal-active');
             document.getElementById('modal-title').innerText = "Editar Tarefa Master";
             document.getElementById('new-title').value = t.title;
@@ -520,18 +542,14 @@
         };
         window.askDeleteTask = (id) => {
             const modal = document.getElementById('confirm-modal');
-            document.getElementById('confirm-title').innerText = "Eliminar Tarefa?";
-            document.getElementById('confirm-text').innerText = "Esta ação removerá o item permanentemente para toda a comunidade.";
+            document.getElementById('confirm-title').innerText = "Excluir Tarefa?";
+            document.getElementById('confirm-text').innerText = "Esta ação removerá o item permanentemente para todos.";
             const btn = document.getElementById('confirm-action-btn');
             btn.onclick = () => deleteTaskCloud(id);
             modal.classList.add('modal-active');
         };
         window.closeConfirmModal = () => document.getElementById('confirm-modal').classList.remove('modal-active');
-        window.askLogout = () => { 
-            localStorage.removeItem('master_session'); 
-            localStorage.removeItem('master_profile');
-            location.reload(); 
-        };
+        window.askLogout = () => { localStorage.clear(); location.reload(); };
 
         startApp();
     </script>
